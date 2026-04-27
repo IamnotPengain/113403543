@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    .image-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      max-width: 1000px;
+      margin: 50px auto;
+      padding: 20px;
+    }
+
+    .img-left {
+      width: 33%;
+      height: 300px;
+      border-radius: 18px;
+      object-fit: cover;
+    }
+
+    .img-center {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1px solid #333;
+    }
+
+    .img-right {
+      width: 33%;
+      height: 300px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="image-container">
+    <img src="https://picsum.photos/id/1018/600/800" alt="Left Image" class="img-left">
+    <img src="https://picsum.photos/id/1036/600/400" alt="Center Image" class="img-center">
+    <img src="https://picsum.photos/id/1018/600/800" alt="Right Image" class="img-right">
+  </div>
+
+</body>
+</html>
