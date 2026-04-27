@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      background-color: #50b3ff;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      font-family: sans-serif;
+    }
+
+    .container {
+      background-color: white;
+      padding: 10px;
+      width: 100%;
+      max-width: 600px;
+      box-sizing: border-box;
+      border-radius: 4px;
+    }
+
+    .header {
+      background-color: #aed55d;
+      height: 100px;
+      margin-bottom: 10px;
+    }
+
+    .middle-section {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    
+    .middle-section .box {
+      background-color: #00c1d5;
+      flex: 1; 
+      height: 100px;
+    }
+
+    .bottom-section {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .bottom-section .box {
+      background-color: #e9ecef;
+      flex: 1;
+      height: 80px;
+    }
+
+    @media screen and (max-width: 479px) {
+      .middle-section {
+        flex-direction: column;
+      }
+      
+      .middle-section .box {
+        flex: none; 
+        height: 50px;
+      }
+
+      .bottom-section {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      
+      .bottom-section .box {
+        height: 60px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header"></div>
+
+    <div class="middle-section">
+      <div class="box"></div>
+      <div class="box"></div>
+      <div class="box"></div>
+    </div>
+
+    <div class="bottom-section">
+      <div class="box"></div>
+      <div class="box"></div>
+      <div class="box"></div>
+      <div class="box"></div>
+    </div>
+  </div>
+
+</body>
+</html>
