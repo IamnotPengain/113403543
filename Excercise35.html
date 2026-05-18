@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <h3>1. List all properties:</h3>
+    <ul id="original"></ul>
+
+    <h3>2. Object after deleting 'age':</h3>
+    <pre id="result"></pre>
+
+    <script>
+        var Person = {
+            firstName : "Tony",
+            lastName : "Lee",
+            age : 50,
+            eyeColor : "Blue"
+        };
+
+        var originalList = document.getElementById('original');
+        for (var prop in Person) {
+            var li = document.createElement('li');
+            li.textContent = prop + ": " + Person[prop];
+            originalList.appendChild(li);
+        }
+
+        delete Person.age;
+
+        document.getElementById('result').textContent = JSON.stringify(Person, null, 2);
+    </script>
+</body>
+</html>

@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PomoGrowth - 專注力電子雞</title>
+    <style>
+        /* 讓 CSS 知道 --progress 是一個百分比變數 */
+        @property --progress {
+            syntax: '<percentage>';
+            inherits: false;
+            initial-value: 0%;
+        }
+
+        /* 基礎重置與背景設定 */
+        body {
+            background-color: #2b3a4a;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        /* 外層：負責發光邊框與立體陰影 */
+        .container-wrapper {
+            background: conic-gradient(#88c0d0 var(--progress, 0%), transparent 0%);
+            padding: 10px; 
+            border-radius: 36px; 
+            box-shadow: 15px 15px 30px #1a232c, 
+                       -15px -15px 30px #3c5168;
+            width: 420px;
+            /* 🌟 移除原本的 transition，改由 JS 高頻率更新達成完美等速 🌟 */
+        }
+
+        /* 主容器 */
+        .container {
+            text-align: center;
+            background: #2b3a4a;
+            padding: 40px 46px; 
+            border-radius: 30px;
+        }
+
+        h1 {
+            margin-top: 0;
+            font-size: 1.5rem;
+            color: #a3c2c2;
+            margin-bottom: 30px;
+        }
+
+        /* 等級與經驗值系統 */
+        .level-container {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+
+        #level-text {
+            font-size: 0.9rem;
+            color: #88c0d0;
+            margin-bottom: 8px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            white-space: nowrap; 
+        }
+
+        .progress-bar-bg {
+            background: #1e2936;
+            border-radius: 10px;
+            height: 10px;
+            width: 100%;
+            box-shadow: inset 3px 3px 6px #151d26, 
+                        inset -3px -3px 6px #273546;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            background: #88c0d0;
+            height: 100%;
+            width: 0%; 
+            border-radius: 10px;
+            transition: width 0.5s ease-out; 
+            box-shadow: 0 0 8px rgba(136, 192, 208, 0.6); 
+        }
+
+        /* 寵物展示區 */
+        .pet-container {
+            margin: 20px 0;
+            min-height: 150px;
+        }
+
+        #pet {
+            font-size: 6rem;
+            display: inline-block;
+            transition: transform 0.3s ease;
+        }
+
+        .pet-focus {
+            animation: float 2s infinite ease-in-out;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        #pet-status {
+            font-size: 0.9rem;
+            color: #8fa6b8;
+            margin-top: 10px;
+        }
+
+        /* 計時器顯示 */
+        #time-display {
+            font-size: 4.5rem;
+            font-weight: bold;
+            color: #88c0d0;
+            margin: 20px 0;
+            letter-spacing: 2px;
+        }
+
+        /* 按鈕設計 */
+        .controls {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 30px;
+        }
+
+        button {
+            background: #2b3a4a;
+            color: #e0e0e0;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 15px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 8px 8px 16px #1a232c, 
+                       -8px -8px 16px #3c5168;
+            transition: all 0.2s ease;
+        }
+
+        button:active {
+            box-shadow: inset 8px 8px 16px #1a232c, 
+                       inset -8px -8px 16px #3c5168;
+            color: #88c0d0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container-wrapper" id="progress-wrapper">
+        <div class="container">
+            <h1>🌱 PomoGrowth</h1>
+            
+            <div class="level-container">
+                <div id="level-text">Pomo-chan's Focus Level: 1 (0/100 XP)</div>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" id="xp-bar"></div>
+                </div>
+            </div>
+
+            <div class="pet-container">
+                <div id="pet">🥚</div> 
+                <p id="pet-status">等待專注中...</p>
+            </div>
+
+            <div id="time-display">00:10</div>
+
+            <div class="controls">
+                <button id="start-btn">開始專注</button>
+                <button id="reset-btn">重置</button>
+            </div>
+        </div>
+    </div> 
+
+    <script>
+        let timer;
+        // 🌟 改為使用毫秒 (ms) 來紀錄，確保高精度
+        let totalTimeMs = 10 * 1000; 
+        let timeLeftMs = 10 * 1000; 
+        let expectedEndTime = 0; // 紀錄真實系統時間的結束點
+
+        let isRunning = false;
+        let isFocusMode = true; 
+
+        let level = 1;
+        let currentXP = 0;
+        const xpRewardPerSession = 25; 
+
+        function getXpNeeded(currentLevel) {
+            return 100 + (currentLevel - 1) * 50; 
+        }
+
+        const timeDisplay = document.getElementById('time-display');
+        const startBtn = document.getElementById('start-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const pet = document.getElementById('pet');
+        const petStatus = document.getElementById('pet-status');
+        const levelText = document.getElementById('level-text');
+        const xpBar = document.getElementById('xp-bar');
+        const progressWrapper = document.getElementById('progress-wrapper'); 
+
+        function updateLevelDisplay() {
+            const neededXP = getXpNeeded(level); 
+            levelText.textContent = `Pomo-chan's Focus Level: ${level} (${currentXP}/${neededXP} XP)`;
+            const progressPercent = (currentXP / neededXP) * 100;
+            xpBar.style.width = `${progressPercent}%`;
+        }
+
+        function gainXP(amount) {
+            currentXP += amount;
+            while (currentXP >= getXpNeeded(level)) {
+                currentXP -= getXpNeeded(level); 
+                level++; 
+            }
+            updateLevelDisplay();
+        }
+
+        function updateDisplay() {
+            // 將剩餘毫秒數轉換為秒 (無條件進位，例如 9900ms 顯示為 10秒)
+            const safeTimeSeconds = Math.max(0, Math.ceil(timeLeftMs / 1000));
+            const minutes = Math.floor(safeTimeSeconds / 60);
+            const seconds = safeTimeSeconds % 60;
+            timeDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function toggleTimer() {
+            if (isRunning) {
+                // 暫停
+                clearInterval(timer);
+                isRunning = false;
+                startBtn.textContent = '繼續';
+                pet.classList.remove('pet-focus');
+                petStatus.textContent = '計時已暫停';
+            } else {
+                // 開始
+                isRunning = true;
+                startBtn.textContent = '暫停';
+                
+                // 🌟 設定未來的預計結束時間點
+                expectedEndTime = Date.now() + timeLeftMs;
+
+                if (isFocusMode) {
+                    pet.textContent = '📚'; 
+                    pet.classList.add('pet-focus'); 
+                    petStatus.textContent = '小怪獸陪你一起專注中！';
+                } else {
+                    pet.textContent = '💤'; 
+                    pet.classList.remove('pet-focus');
+                    petStatus.textContent = '休息中...';
+                }
+
+                // 🌟 將間隔設為 30ms (大約 33FPS)，達作視覺上的完全等速平滑感
+                timer = setInterval(() => {
+                    // 根據當前系統時間計算精準剩餘時間
+                    timeLeftMs = expectedEndTime - Date.now();
+
+                    if (timeLeftMs <= 0) {
+                        // === 模式切換邏輯 ===
+                        isFocusMode = !isFocusMode; 
+                        
+                        if (isFocusMode) {
+                            totalTimeMs = 10 * 1000;
+                            pet.textContent = '📚';
+                            pet.classList.add('pet-focus');
+                            petStatus.textContent = '休息結束，自動開始專注！';
+                        } else {
+                            gainXP(xpRewardPerSession); 
+                            totalTimeMs = 5 * 1000;
+                            pet.textContent = '💤';
+                            pet.classList.remove('pet-focus');
+                            petStatus.textContent = '太棒了！獲得 25 XP，眼睛休息一下吧。';
+                        }
+                        
+                        // 設定下一階段的新時間
+                        timeLeftMs = totalTimeMs;
+                        expectedEndTime = Date.now() + totalTimeMs;
+                        
+                        if (progressWrapper) {
+                            progressWrapper.style.setProperty('--progress', `0%`);
+                        }
+                        updateDisplay();
+                    } else {
+                        // === 正常倒數邏輯 ===
+                        updateDisplay();
+                        
+                        // 計算高精度的百分比並立即渲染
+                        if (progressWrapper) {
+                            const percent = ((totalTimeMs - timeLeftMs) / totalTimeMs) * 100;
+                            progressWrapper.style.setProperty('--progress', `${percent}%`);
+                        }
+                    }
+                }, 30);
+            }
+        }
+
+        function resetTimer() {
+            clearInterval(timer); 
+            isRunning = false;    
+            isFocusMode = true;   
+            totalTimeMs = 10 * 1000;
+            timeLeftMs = totalTimeMs;        
+            updateDisplay();      
+            
+            if (progressWrapper) {
+                progressWrapper.style.setProperty('--progress', `0%`);
+            }
+            
+            startBtn.textContent = '開始專注'; 
+            pet.textContent = '🥚';
+            pet.classList.remove('pet-focus');
+            petStatus.textContent = '等待專注中...';
+        }
+
+        startBtn.addEventListener('click', toggleTimer);
+        resetBtn.addEventListener('click', resetTimer);
+
+        updateDisplay();
+        updateLevelDisplay();
+    </script>
+</body>
+</html>
